@@ -1,894 +1,1746 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>302AI 换装工作流网页控制台</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<!doctype html
+>
+<html lang="zh-CN"
+>
+<head
+>
+  <meta charset="UTF-8"
+ />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"
+ />
+  <title>302AI 换装工作流网页控制台</title
+>
+  <script src="https://cdn.tailwindcss.com"></script
+>
   <style>
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .glass { backdrop-filter: blur(12px); }
-    .drop-active { border-color: rgb(139 92 246) !important; background: rgba(139,92,246,.08) !important; }
-  </style>
-</head>
-<body class="min-h-screen bg-slate-950 text-slate-100">
-  <div class="mx-auto max-w-7xl p-4 md:p-6">
-    <header class="mb-6 flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 glass md:flex-row md:items-center md:justify-between">
-      <div>
-        <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-300">
-          <span class="h-2 w-2 rounded-full bg-violet-400"></span>
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI"
+, sans-serif; }
+    .glass { backdrop-filter: blur(12px
+); }
+    .drop-active { border-color: rgb(139 92 246) !important; background: rgba(139,92,246,.08) !important
+; }
+  </style
+>
+</head
+>
+<body class="min-h-screen bg-slate-950 text-slate-100"
+>
+  <div class="mx-auto max-w-7xl p-4 md:p-6"
+>
+    <header class="mb-6 flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 glass md:flex-row md:items-center md:justify-between"
+>
+      <div
+>
+        <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-300"
+>
+          <span class="h-2 w-2 rounded-full bg-violet-400"></span
+>
           302AI / Workers 可部署单页版 · 队列版
-        </div>
-        <h1 class="text-2xl font-bold tracking-tight">302AI 换装工作流网页控制台</h1>
-        <p class="mt-2 text-sm text-slate-400">支持拖拽上传、单图/双件模式、取消等待、预览大图，以及多任务自动排队串行生成。</p>
-      </div>
-      <div class="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 md:max-w-md">
-        <div class="font-semibold">说明</div>
-        <div class="mt-1 text-amber-200/90">已按你提供的 RunningHub 页面体验重做 UI 和交互，底层改为通过 Cloudflare Worker 调用 302AI 对接 Gemini / GPT 图像模型生成，不再依赖 RunningHub。</div>
-      </div>
-    </header>
+        </div
+>
+        <h1 class="text-2xl font-bold tracking-tight">302AI 换装工作流网页控制台</h1
+>
+        <p class="mt-2 text-sm text-slate-400">支持拖拽上传、单图/双件模式、取消等待、预览大图，以及多任务自动排队串行生成。</p
+>
+      </div
+>
+      <div class="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 md:max-w-md"
+>
+        <div class="font-semibold">说明</div
+>
+        <div class="mt-1 text-amber-200/90">已按你提供的 RunningHub 页面体验重做 UI 和交互，底层改为通过 Cloudflare Worker 调用 302AI 对接 Gemini / GPT 图像模型生成，不再依赖 RunningHub。</div
+>
+      </div
+>
+    </header
+>
 
-    <main class="grid grid-cols-1 gap-6 xl:grid-cols-12">
-      <section class="space-y-6 xl:col-span-4">
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-          <h2 class="mb-4 text-sm font-semibold text-violet-300">接口设置</h2>
-          <div class="space-y-4">
-            <div>
-              <div class="mb-1 flex items-center justify-between gap-3">
-                <label class="block text-xs text-slate-400">Worker 地址</label>
-                <button id="testWorkerBtn" type="button" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-[11px] text-slate-300 transition hover:border-violet-500 hover:text-violet-200">测试 Worker</button>
-              </div>
-              <input id="workerUrl" type="text" placeholder="https://your-worker.workers.dev" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500" />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs text-slate-400">302AI 模型名</label>
-              <input id="model" type="text" value="gemini-2.5-flash-image-preview" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500" />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs text-slate-400">提示词</label>
-              <textarea id="prompt" rows="4" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500">让图1中的女模特穿上图2中的上衣，需确保衣服的一致性。</textarea>
-            </div>
-            <div>
-              <label class="mb-1 block text-xs text-slate-400">颜色要求（严格，可选）</label>
-              <textarea id="colorRequirement" rows="3" placeholder="例如：上衣必须是纯黑色，裤子必须是浅蓝色牛仔，不允许偏色、串色、自动改成别的颜色。" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500"></textarea>
-              <p class="mt-2 text-xs leading-5 text-slate-500">填写后会自动拼接强约束提示，尽量减少模型颜色识别错误。</p>
-              <p class="mt-2 text-[11px] leading-5 text-slate-500">Worker 地址只填根地址，例如 <span class="text-slate-300">https://your-worker.workers.dev</span>。不要手动加 <span class="text-slate-300">/api/tryon</span>。</p>
-            </div>
-            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-              <input id="dualMode" type="checkbox" class="h-4 w-4 accent-emerald-500" />
-              <div>
-                <div class="font-medium">双件模式（上衣+裤子）</div>
-                <div class="mt-0.5 text-xs text-emerald-200/90">不勾选时为单图模式：只上传一张服装图。勾选后同时启用服装图1和服装图2。</div>
-              </div>
-            </label>
-          </div>
-        </div>
+    <main class="grid grid-cols-1 gap-6 xl:grid-cols-12"
+>
+      <section class="space-y-6 xl:col-span-4"
+>
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5"
+>
+          <h2 class="mb-4 text-sm font-semibold text-violet-300">接口设置</h2
+>
+          <div class="space-y-4"
+>
+            <div
+>
+              <div class="mb-1 flex items-center justify-between gap-3"
+>
+                <label class="block text-xs text-slate-400">Worker 地址</label
+>
+                <button id="testWorkerBtn" type="button" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-[11px] text-slate-300 transition hover:border-violet-500 hover:text-violet-200">测试 Worker</button
+>
+              </div
+>
+              <input id="workerUrl" type="text" placeholder="https://your-worker.workers.dev" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500"
+ />
+            </div
+>
+            <div
+>
+              <label class="mb-1 block text-xs text-slate-400">302AI 模型名</label
+>
+              <input id="model" type="text" value="gemini-2.5-flash-image-preview" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500"
+ />
+            </div
+>
+            <div
+>
+              <label class="mb-1 block text-xs text-slate-400">提示词</label
+>
+              <textarea id="prompt" rows="4" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500">让图1中的女模特穿上图2中的上衣，需确保衣服的一致性。</textarea
+>
+            </div
+>
+            <div
+>
+              <label class="mb-1 block text-xs text-slate-400">颜色要求（严格，可选）</label
+>
+              <textarea id="colorRequirement" rows="3" placeholder="例如：上衣必须是纯黑色，裤子必须是浅蓝色牛仔，不允许偏色、串色、自动改成别的颜色。" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-violet-500"></textarea
+>
+              <p class="mt-2 text-xs leading-5 text-slate-500">填写后会自动拼接强约束提示，尽量减少模型颜色识别错误。</p
+>
+              <p class="mt-2 text-[11px] leading-5 text-slate-500">Worker 地址只填根地址，例如 <span class="text-slate-300">https://your-worker.workers.dev</span>。不要手动加 <span class="text-slate-300">/api/tryon</span>。</p
+>
+            </div
+>
+            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
+>
+              <input id="dualMode" type="checkbox" class="h-4 w-4 accent-emerald-500"
+ />
+              <div
+>
+                <div class="font-medium">双件模式（上衣+裤子）</div
+>
+                <div class="mt-0.5 text-xs text-emerald-200/90">不勾选时为单图模式：只上传一张服装图。勾选后同时启用服装图1和服装图2。</div
+>
+              </div
+>
+            </label
+>
+          </div
+>
+        </div
+>
 
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-          <h2 class="mb-4 text-sm font-semibold text-violet-300">素材上传</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="mb-2 block text-xs text-slate-400">模特原图（图1）</label>
-              <label id="modelDrop" class="drop-zone block cursor-pointer rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-4 transition hover:border-violet-500">
-                <input id="modelInput" type="file" accept="image/*" class="hidden" />
-                <div id="modelPreview" class="flex min-h-[170px] items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-center text-sm text-slate-500">点击上传或直接拖拽模特图到这里</div>
-              </label>
-            </div>
-            <div>
-              <label class="mb-2 block text-xs text-slate-400">服装图1（图2）</label>
-              <label id="topDrop" class="drop-zone block cursor-pointer rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-4 transition hover:border-violet-500">
-                <input id="topInput" type="file" accept="image/*" class="hidden" />
-                <div id="topPreview" class="flex min-h-[170px] items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-center text-sm text-slate-500">点击上传或直接拖拽服装图1到这里</div>
-              </label>
-            </div>
-            <div id="pantsBlock">
-              <label class="mb-2 block text-xs text-slate-400">服装图2（图3，双件模式时使用）</label>
-              <label id="pantsDrop" class="drop-zone block cursor-pointer rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-4 transition hover:border-violet-500">
-                <input id="pantsInput" type="file" accept="image/*" class="hidden" />
-                <div id="pantsPreview" class="flex min-h-[170px] items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-center text-sm text-slate-500">点击上传或直接拖拽服装图2到这里</div>
-              </label>
-            </div>
-          </div>
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5"
+>
+          <h2 class="mb-4 text-sm font-semibold text-violet-300">素材上传</h2
+>
+          <div class="space-y-4"
+>
+            <div
+>
+              <label class="mb-2 block text-xs text-slate-400">模特原图（图1）</label
+>
+              <label id="modelDrop" class="drop-zone block cursor-pointer rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-4 transition hover:border-violet-500"
+>
+                <input id="modelInput" type="file" accept="image/*" class="hidden"
+ />
+                <div id="modelPreview" class="flex min-h-[170px] items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-center text-sm text-slate-500">点击上传或直接拖拽模特图到这里</div
+>
+              </label
+>
+            </div
+>
+            <div
+>
+              <label class="mb-2 block text-xs text-slate-400">服装图1（图2）</label
+>
+              <label id="topDrop" class="drop-zone block cursor-pointer rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-4 transition hover:border-violet-500"
+>
+                <input id="topInput" type="file" accept="image/*" class="hidden"
+ />
+                <div id="topPreview" class="flex min-h-[170px] items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-center text-sm text-slate-500">点击上传或直接拖拽服装图1到这里</div
+>
+              </label
+>
+            </div
+>
+            <div id="pantsBlock"
+>
+              <label class="mb-2 block text-xs text-slate-400">服装图2（图3，双件模式时使用）</label
+>
+              <label id="pantsDrop" class="drop-zone block cursor-pointer rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-4 transition hover:border-violet-500"
+>
+                <input id="pantsInput" type="file" accept="image/*" class="hidden"
+ />
+                <div id="pantsPreview" class="flex min-h-[170px] items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-center text-sm text-slate-500">点击上传或直接拖拽服装图2到这里</div
+>
+              </label
+>
+            </div
+>
+          </div
+>
 
-          <div class="mt-4 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-3 text-xs leading-6 text-sky-100">
-            当前站点逻辑：<span class="font-semibold">图1 = 模特图</span>、<span class="font-semibold">图2 = 服装参考图</span>、<span class="font-semibold">图3 = 第二件服装参考图</span>、<span class="font-semibold">提示词 = 文本约束</span>。<br>
+          <div class="mt-4 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-3 text-xs leading-6 text-sky-100"
+>
+            当前站点逻辑：
+<span class="font-semibold">图1 = 模特图</span>、<span class="font-semibold">图2 = 服装参考图</span>、<span class="font-semibold">图3 = 第二件服装参考图</span>、<span class="font-semibold">提示词 = 文本约束</span>。<br
+>
             保持你现在的 302AI / Worker 接入方式，只重做前端体验与队列逻辑。
-          </div>
+          </div
+>
 
-          <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <button id="generateBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-violet-500 bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
+          <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"
+>
+            <button id="generateBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-violet-500 bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+>
               立即生成当前任务
-            </button>
-            <button id="addQueueBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-violet-500 hover:text-violet-200">
+            </button
+>
+            <button id="addQueueBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-violet-500 hover:text-violet-200"
+>
               仅加入队列
-            </button>
-            <button id="queueAndStartBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50">
+            </button
+>
+            <button id="queueAndStartBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+>
               加入并立即开始
-            </button>
-          </div>
+            </button
+>
+          </div
+>
 
-          <p class="mt-3 text-xs leading-5 text-slate-500">
-            说明：<span class="text-violet-300">立即生成当前任务</span>会马上提交当前这一次；
-            <span class="text-slate-300">仅加入队列</span>只会先放到下面等待，不会自动执行；
-            <span class="text-emerald-300">加入并立即开始</span>会自动把当前任务加入队列并立刻开跑。
-          </p>
+          <p class="mt-3 text-xs leading-5 text-slate-500"
+>
+            说明：
+<span class="text-violet-300">立即生成当前任务</span
+>会马上提交当前这一次；
+            <span class="text-slate-300">仅加入队列</span
+>只会先放到下面等待，不会自动执行；
+            <span class="text-emerald-300">加入并立即开始</span
+>会自动把当前任务加入队列并立刻开跑。
+          </p
+>
 
-          <div class="mt-3 grid grid-cols-3 gap-3">
-            <button id="startQueueBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50">
+          <div class="mt-3 grid grid-cols-3 gap-3"
+>
+            <button id="startQueueBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+>
               开始队列
-            </button>
-            <button id="cancelBtn" disabled class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-rose-500 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-50">
+            </button
+>
+            <button id="cancelBtn" disabled class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-rose-500 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-50"
+>
               停止当前
-            </button>
-            <button id="clearPendingBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-slate-500">
+            </button
+>
+            <button id="clearPendingBtn" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-slate-500"
+>
               清空未开始
-            </button>
-          </div>
-        </div>
-      </section>
+            </button
+>
+          </div
+>
+        </div
+>
+      </section
+>
 
-      <section class="space-y-6 xl:col-span-8">
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-          <div class="mb-4 flex items-center justify-between gap-3">
-            <h2 class="text-sm font-semibold text-slate-200">生成结果</h2>
-            <div id="statusBadge" class="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-400">待开始</div>
-          </div>
+      <section class="space-y-6 xl:col-span-8"
+>
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5"
+>
+          <div class="mb-4 flex items-center justify-between gap-3"
+>
+            <h2 class="text-sm font-semibold text-slate-200">生成结果</h2
+>
+            <div id="statusBadge" class="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-400">待开始</div
+>
+          </div
+>
 
-          <div class="grid grid-cols-1 gap-5 lg:grid-cols-5">
-            <div class="lg:col-span-3">
-              <div id="resultWrap" class="flex min-h-[520px] items-center justify-center overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 p-4 text-center text-slate-500">
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-5"
+>
+            <div class="lg:col-span-3"
+>
+              <div id="resultWrap" class="flex min-h-[520px] items-center justify-center overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 p-4 text-center text-slate-500"
+>
                 配置参数并点击“立即生成当前任务”或“加入队列”
-              </div>
-            </div>
+              </div
+>
+            </div
+>
 
-            <div class="space-y-4 lg:col-span-2">
-              <div class="rounded-3xl border border-slate-800 bg-slate-950 p-4">
-                <div class="mb-3 text-xs text-slate-400">任务进度</div>
-                <div class="mb-3 h-3 overflow-hidden rounded-full bg-slate-800">
-                  <div id="progressBar" class="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"></div>
-                </div>
-                <div class="flex items-center justify-between text-xs text-slate-400">
-                  <span id="progressText">0%</span>
-                  <span id="elapsedText">00:00</span>
-                </div>
-              </div>
+            <div class="space-y-4 lg:col-span-2"
+>
+              <div class="rounded-3xl border border-slate-800 bg-slate-950 p-4"
+>
+                <div class="mb-3 text-xs text-slate-400">任务进度</div
+>
+                <div class="mb-3 h-3 overflow-hidden rounded-full bg-slate-800"
+>
+                  <div id="progressBar" class="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"></div
+>
+                </div
+>
+                <div class="flex items-center justify-between text-xs text-slate-400"
+>
+                  <span id="progressText">0%</span
+>
+                  <span id="elapsedText">00:00</span
+>
+                </div
+>
+              </div
+>
 
-              <div class="rounded-3xl border border-slate-800 bg-slate-950 p-4">
-                <div class="mb-3 text-xs text-slate-400">任务信息</div>
-                <div class="space-y-2 text-sm text-slate-300">
-                  <div><span class="text-slate-500">Task ID：</span><span id="taskIdText">-</span></div>
-                  <div><span class="text-slate-500">队列状态：</span><span id="taskStatusText">-</span></div>
-                  <div><span class="text-slate-500">运行耗时：</span><span id="taskCostTimeText">-</span></div>
-                  <div><span class="text-slate-500">队列统计：</span><span id="queueSummaryText">0 / 0</span></div>
-                </div>
-              </div>
+              <div class="rounded-3xl border border-slate-800 bg-slate-950 p-4"
+>
+                <div class="mb-3 text-xs text-slate-400">任务信息</div
+>
+                <div class="space-y-2 text-sm text-slate-300"
+>
+                  <div><span class="text-slate-500">Task ID：</span><span id="taskIdText">-</span></div
+>
+                  <div><span class="text-slate-500">队列状态：</span><span id="taskStatusText">-</span></div
+>
+                  <div><span class="text-slate-500">运行耗时：</span><span id="taskCostTimeText">-</span></div
+>
+                  <div><span class="text-slate-500">队列统计：</span><span id="queueSummaryText">0 / 0</span></div
+>
+                </div
+>
+              </div
+>
 
-              <div class="rounded-3xl border border-slate-800 bg-slate-950 p-4">
-                <div class="mb-3 text-xs text-slate-400">使用说明</div>
-                <ol class="list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-300">
-                  <li>输入 Worker 地址和 302AI 模型名。</li>
-                  <li>上传模特图和服装图。</li>
-                  <li>可以直接点“立即生成当前任务”。</li>
-                  <li>也可以反复改图、改提示词，每次点“加入队列”。</li>
-                  <li>最后点一次“开始队列”，系统会自动一个接一个跑完。</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
+              <div class="rounded-3xl border border-slate-800 bg-slate-950 p-4"
+>
+                <div class="mb-3 text-xs text-slate-400">使用说明</div
+>
+                <ol class="list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-300"
+>
+                  <li>输入 Worker 地址和 302AI 模型名。</li
+>
+                  <li>上传模特图和服装图。</li
+>
+                  <li>可以直接点“立即生成当前任务”。</li
+>
+                  <li>也可以反复改图、改提示词，每次点“加入队列”。</li
+>
+                  <li>最后点一次“开始队列”，系统会自动一个接一个跑完。</li
+>
+                </ol
+>
+              </div
+>
+            </div
+>
+          </div
+>
+        </div
+>
 
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-slate-200">任务队列</h2>
-            <div class="text-xs text-slate-400">关闭网页或刷新页面后，队列中的本地数据会清空；已生成结果仍会保存在本地历史记录里。</div>
-          </div>
-          <div id="queueWrap" class="space-y-3"></div>
-        </div>
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5"
+>
+          <div class="mb-4 flex items-center justify-between"
+>
+            <h2 class="text-sm font-semibold text-slate-200">任务队列</h2
+>
+            <div class="text-xs text-slate-400">关闭网页或刷新页面后，队列中的本地数据会清空；已生成结果仍会保存在本地历史记录里。</div
+>
+          </div
+>
+          <div id="queueWrap" class="space-y-3"></div
+>
+        </div
+>
 
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-slate-200">本地历史记录</h2>
-            <button id="clearHistoryBtn" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-300 transition hover:border-slate-500">清空</button>
-          </div>
-          <div id="historyWrap" class="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"></div>
-        </div>
-      </section>
-    </main>
-  </div>
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-5"
+>
+          <div class="mb-4 flex items-center justify-between"
+>
+            <h2 class="text-sm font-semibold text-slate-200">本地历史记录</h2
+>
+            <button id="clearHistoryBtn" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-300 transition hover:border-slate-500">清空</button
+>
+          </div
+>
+          <div id="historyWrap" class="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"></div
+>
+        </div
+>
+      </section
+>
+    </main
+>
+  </div
+>
 
-  <div id="previewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
-    <div class="relative w-full max-w-5xl rounded-3xl border border-slate-700 bg-slate-950 p-4">
-      <button id="closePreviewBtn" class="absolute right-4 top-4 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-sm text-slate-200">关闭</button>
-      <img id="previewImage" src="" alt="preview" class="max-h-[82vh] w-full rounded-2xl object-contain" />
-    </div>
-  </div>
+  <div id="previewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4"
+>
+    <div class="relative w-full max-w-5xl rounded-3xl border border-slate-700 bg-slate-950 p-4"
+>
+      <button id="closePreviewBtn" class="absolute right-4 top-4 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-sm text-slate-200">关闭</button
+>
+      <img id="previewImage" src="" alt="preview" class="max-h-[82vh] w-full rounded-2xl object-contain"
+ />
+    </div
+>
+  </div
+>
 
   <script>
-    const TRANSPARENT_PNG_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WnXcRkAAAAASUVORK5CYII=';
+    const TRANSPARENT_PNG_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WnXcRkAAAAASUVORK5CYII='
+;
 
-    const state = {
-      images: { model: null, top: null, pants: null },
-      queue: [],
-      isGenerating: false,
-      queueRunning: false,
-      activeQueueId: null,
-      stopAfterCurrent: false,
-      progress: 0,
-      elapsedSeconds: 0,
-      elapsedTimer: null,
-      currentTaskId: null,
+    const
+ state = {
+      images: { model: null, top: null, pants: null
+ },
+      queue
+: [],
+      isGenerating: false
+,
+      queueRunning: false
+,
+      activeQueueId: null
+,
+      stopAfterCurrent: false
+,
+      progress: 0
+,
+      elapsedSeconds: 0
+,
+      elapsedTimer: null
+,
+      currentTaskId: null
+,
     };
 
-    const el = {
-      workerUrl: document.getElementById('workerUrl'),
-      model: document.getElementById('model'),
-      prompt: document.getElementById('prompt'),
-      colorRequirement: document.getElementById('colorRequirement'),
-      dualMode: document.getElementById('dualMode'),
-      modelInput: document.getElementById('modelInput'),
-      topInput: document.getElementById('topInput'),
-      pantsInput: document.getElementById('pantsInput'),
-      modelPreview: document.getElementById('modelPreview'),
-      topPreview: document.getElementById('topPreview'),
-      pantsPreview: document.getElementById('pantsPreview'),
-      pantsBlock: document.getElementById('pantsBlock'),
-      modelDrop: document.getElementById('modelDrop'),
-      topDrop: document.getElementById('topDrop'),
-      pantsDrop: document.getElementById('pantsDrop'),
-      generateBtn: document.getElementById('generateBtn'),
-      addQueueBtn: document.getElementById('addQueueBtn'),
-      queueAndStartBtn: document.getElementById('queueAndStartBtn'),
-      startQueueBtn: document.getElementById('startQueueBtn'),
-      cancelBtn: document.getElementById('cancelBtn'),
-      clearPendingBtn: document.getElementById('clearPendingBtn'),
-      resultWrap: document.getElementById('resultWrap'),
-      progressBar: document.getElementById('progressBar'),
-      progressText: document.getElementById('progressText'),
-      elapsedText: document.getElementById('elapsedText'),
-      statusBadge: document.getElementById('statusBadge'),
-      taskIdText: document.getElementById('taskIdText'),
-      taskStatusText: document.getElementById('taskStatusText'),
-      taskCostTimeText: document.getElementById('taskCostTimeText'),
-      queueSummaryText: document.getElementById('queueSummaryText'),
-      queueWrap: document.getElementById('queueWrap'),
-      historyWrap: document.getElementById('historyWrap'),
-      clearHistoryBtn: document.getElementById('clearHistoryBtn'),
-      previewModal: document.getElementById('previewModal'),
-      previewImage: document.getElementById('previewImage'),
-      closePreviewBtn: document.getElementById('closePreviewBtn'),
-      testWorkerBtn: document.getElementById('testWorkerBtn'),
+    const
+ el = {
+      workerUrl: document.getElementById('workerUrl'
+),
+      model: document.getElementById('model'
+),
+      prompt: document.getElementById('prompt'
+),
+      colorRequirement: document.getElementById('colorRequirement'
+),
+      dualMode: document.getElementById('dualMode'
+),
+      modelInput: document.getElementById('modelInput'
+),
+      topInput: document.getElementById('topInput'
+),
+      pantsInput: document.getElementById('pantsInput'
+),
+      modelPreview: document.getElementById('modelPreview'
+),
+      topPreview: document.getElementById('topPreview'
+),
+      pantsPreview: document.getElementById('pantsPreview'
+),
+      pantsBlock: document.getElementById('pantsBlock'
+),
+      modelDrop: document.getElementById('modelDrop'
+),
+      topDrop: document.getElementById('topDrop'
+),
+      pantsDrop: document.getElementById('pantsDrop'
+),
+      generateBtn: document.getElementById('generateBtn'
+),
+      addQueueBtn: document.getElementById('addQueueBtn'
+),
+      queueAndStartBtn: document.getElementById('queueAndStartBtn'
+),
+      startQueueBtn: document.getElementById('startQueueBtn'
+),
+      cancelBtn: document.getElementById('cancelBtn'
+),
+      clearPendingBtn: document.getElementById('clearPendingBtn'
+),
+      resultWrap: document.getElementById('resultWrap'
+),
+      progressBar: document.getElementById('progressBar'
+),
+      progressText: document.getElementById('progressText'
+),
+      elapsedText: document.getElementById('elapsedText'
+),
+      statusBadge: document.getElementById('statusBadge'
+),
+      taskIdText: document.getElementById('taskIdText'
+),
+      taskStatusText: document.getElementById('taskStatusText'
+),
+      taskCostTimeText: document.getElementById('taskCostTimeText'
+),
+      queueSummaryText: document.getElementById('queueSummaryText'
+),
+      queueWrap: document.getElementById('queueWrap'
+),
+      historyWrap: document.getElementById('historyWrap'
+),
+      clearHistoryBtn: document.getElementById('clearHistoryBtn'
+),
+      previewModal: document.getElementById('previewModal'
+),
+      previewImage: document.getElementById('previewImage'
+),
+      closePreviewBtn: document.getElementById('closePreviewBtn'
+),
+      testWorkerBtn: document.getElementById('testWorkerBtn'
+),
     };
 
-    function uid() {
-      return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    function uid(
+) {
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 8
+)}`;
     }
 
-    function escapeHtml(str = '') {
-      return str
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+    function escapeHtml(str = ''
+) {
+      return
+ str
+        .
+replaceAll('&', '&amp;'
+)
+        .
+replaceAll('<', '&lt;'
+)
+        .
+replaceAll('>', '&gt;'
+)
+        .
+replaceAll('"', '&quot;'
+)
+        .
+replaceAll("'", '&#039;'
+);
     }
 
-    function formatTime(seconds) {
-      const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-      const s = String(seconds % 60).padStart(2, '0');
-      return `${m}:${s}`;
+    function formatTime(seconds
+) {
+      const m = String(Math.floor(seconds / 60)).padStart(2, '0'
+);
+      const s = String(seconds % 60).padStart(2, '0'
+);
+      return `${m}:${s}
+`;
     }
 
 
-    function normalizeWorkerUrl(input) {
-      let value = String(input || '').trim();
-      if (!value) return '';
-      if (!/^https?:\/\//i.test(value)) value = `https://${value}`;
-      value = value.replace(/\/+$/, '');
-      value = value.replace(/\/api\/tryon$/i, '');
-      return value;
+    function normalizeWorkerUrl(input
+) {
+      let value = String(input || '').trim
+();
+      if (!value) return ''
+;
+      if (!/^https?:\/\//i.test(value)) value = `https://${value}
+`;
+      value = value.
+replace(/\/+$/, ''
+);
+      value = value.
+replace(/\/api\/tryon$/i, ''
+);
+      return
+ value;
     }
 
-    async function testWorkerConnection(showSuccess = true) {
-      const workerUrl = normalizeWorkerUrl(el.workerUrl.value);
-      if (!workerUrl) throw new Error('请先输入 Worker 地址');
-      el.workerUrl.value = workerUrl;
-      saveSettings();
+    async function testWorkerConnection(showSuccess = true
+) {
+      const workerUrl = normalizeWorkerUrl(el.workerUrl.value
+);
+      if (!workerUrl) throw new Error('请先输入 Worker 地址'
+);
+      el.
+workerUrl.value
+ = workerUrl;
+      saveSettings
+();
 
-      const res = await fetch(workerUrl, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
+      const res = await fetch
+(workerUrl, {
+        method: 'GET'
+,
+        headers: { Accept: 'application/json'
+ },
       });
 
-      let data = null;
-      try {
-        data = await res.json();
-      } catch (error) {
-        throw new Error('Worker 已响应，但返回的不是 JSON，请检查 Worker 是否部署了最新代码');
+      let data = null
+;
+      try
+ {
+        data = 
+await res.json
+();
+      } 
+catch
+ (error) {
+        throw new Error('Worker 已响应，但返回的不是 JSON，请检查 Worker 是否部署了最新代码'
+);
       }
 
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || data?.message || 'Worker 连接测试失败');
+      if (!res.ok || !data?.ok
+) {
+        throw new Error(data?.error || data?.message || 'Worker 连接测试失败'
+);
       }
 
-      if (showSuccess) {
-        setStatus('Worker 连接正常', 'success');
-        showMessage('Worker 连接测试成功，现在可以上传图片并点击“立即生成当前任务”了。', 'queue');
+      if
+ (showSuccess) {
+        setStatus('Worker 连接正常', 'success'
+);
+        showMessage('Worker 连接测试成功，现在可以上传图片并点击“立即生成当前任务”了。', 'queue'
+);
       }
-      return workerUrl;
+      return
+ workerUrl;
     }
 
-    function saveSettings() {
-      localStorage.setItem('tryon_worker_url', el.workerUrl.value.trim());
-      localStorage.setItem('tryon_model', el.model.value.trim());
-      localStorage.setItem('tryon_prompt', el.prompt.value);
-      localStorage.setItem('tryon_color_requirement', el.colorRequirement.value);
-      localStorage.setItem('tryon_dual_mode', el.dualMode.checked ? '1' : '0');
+    function saveSettings(
+) {
+      localStorage.setItem('tryon_worker_url', el.workerUrl.value.trim
+());
+      localStorage.setItem('tryon_model', el.model.value.trim
+());
+      localStorage.setItem('tryon_prompt', el.prompt.value
+);
+      localStorage.setItem('tryon_color_requirement', el.colorRequirement.value
+);
+      localStorage.setItem('tryon_dual_mode', el.dualMode.checked ? '1' : '0'
+);
     }
 
-    function loadSettings() {
-      el.workerUrl.value = localStorage.getItem('tryon_worker_url') || '';
-      el.model.value = localStorage.getItem('tryon_model') || 'gemini-2.5-flash-image-preview';
-      el.prompt.value = localStorage.getItem('tryon_prompt') || '让图1中的女模特穿上图2中的上衣，需确保衣服的一致性。';
-      el.colorRequirement.value = localStorage.getItem('tryon_color_requirement') || '';
-      el.dualMode.checked = localStorage.getItem('tryon_dual_mode') === '1';
+    function loadSettings(
+) {
+      el.
+workerUrl.value = localStorage.getItem('tryon_worker_url') || ''
+;
+      el.
+model.value = localStorage.getItem('tryon_model') || 'gemini-2.5-flash-image-preview'
+;
+      el.
+prompt.value = localStorage.getItem('tryon_prompt') || '让图1中的女模特穿上图2中的上衣，需确保衣服的一致性。'
+;
+      el.
+colorRequirement.value = localStorage.getItem('tryon_color_requirement') || ''
+;
+      el.
+dualMode.checked = localStorage.getItem('tryon_dual_mode') === '1'
+;
     }
 
-    function setStatus(label, tone = 'default') {
-      const tones = {
-        default: 'border-slate-700 bg-slate-950 text-slate-400',
-        running: 'border-violet-500/30 bg-violet-500/10 text-violet-200',
-        success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
-        error: 'border-rose-500/30 bg-rose-500/10 text-rose-200',
-        queue: 'border-sky-500/30 bg-sky-500/10 text-sky-200',
+    function setStatus(label, tone = 'default'
+) {
+      const
+ tones = {
+        default: 'border-slate-700 bg-slate-950 text-slate-400'
+,
+        running: 'border-violet-500/30 bg-violet-500/10 text-violet-200'
+,
+        success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+,
+        error: 'border-rose-500/30 bg-rose-500/10 text-rose-200'
+,
+        queue: 'border-sky-500/30 bg-sky-500/10 text-sky-200'
+,
       };
-      el.statusBadge.className = `rounded-full px-3 py-1 text-xs ${tones[tone] || tones.default}`;
-      el.statusBadge.textContent = label;
+      el.
+statusBadge.className = `rounded-full px-3 py-1 text-xs ${tones[tone] || tones.default
+}`;
+      el.
+statusBadge.textContent
+ = label;
     }
 
-    function setProgress(value) {
-      state.progress = Math.max(0, Math.min(100, Math.round(value)));
-      el.progressBar.style.width = `${state.progress}%`;
-      el.progressText.textContent = `${state.progress}%`;
+    function setProgress(value
+) {
+      state.
+progress = Math.max(0, Math.min(100, Math.round
+(value)));
+      el.
+progressBar.style.width = `${state.progress}
+%`;
+      el.
+progressText.textContent = `${state.progress}
+%`;
     }
 
-    function showMessage(msg, tone = 'default') {
-      const color = tone === 'error' ? 'text-rose-300' : tone === 'running' ? 'text-violet-300' : tone === 'queue' ? 'text-sky-300' : 'text-slate-400';
-      el.resultWrap.innerHTML = `<div class="px-6 text-center text-sm ${color}">${escapeHtml(msg)}</div>`;
+    function showMessage(msg, tone = 'default'
+) {
+      const color = tone === 'error' ? 'text-rose-300' : tone === 'running' ? 'text-violet-300' : tone === 'queue' ? 'text-sky-300' : 'text-slate-400'
+;
+      el.
+resultWrap.innerHTML = `<div class="px-6 text-center text-sm ${color}">${escapeHtml(msg)}
+</div>`;
     }
 
-    function showResultImage(url, queueLabel = '') {
-      el.resultWrap.innerHTML = `
+    function showResultImage(url, queueLabel = ''
+) {
+      el.
+resultWrap.innerHTML = 
+`
         <div class="w-full">
-          <button onclick="openPreview('${url}')" class="block w-full">
-            <img src="${url}" alt="result" class="max-h-[640px] w-full rounded-2xl object-contain" />
+          <button onclick="openPreview('
+${url}
+')" class="block w-full">
+            <img src="
+${url}
+" alt="result" class="max-h-[640px] w-full rounded-2xl object-contain" />
           </button>
           <div class="mt-4 flex flex-wrap gap-3">
-            <button onclick="openPreview('${url}')" class="rounded-2xl border border-violet-500 bg-violet-600 px-4 py-2 text-sm font-medium text-white">预览大图</button>
-            <a href="${url}" target="_blank" rel="noreferrer" class="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200">打开原图</a>
-            <a href="${url}" download class="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200">下载图片</a>
+            <button onclick="openPreview('
+${url}
+')" class="rounded-2xl border border-violet-500 bg-violet-600 px-4 py-2 text-sm font-medium text-white">预览大图</button>
+            <a href="
+${url}
+" target="_blank" rel="noreferrer" class="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200">打开原图</a>
+            <a href="
+${url}
+" download class="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200">下载图片</a>
           </div>
-          ${queueLabel ? `<div class="mt-3 text-xs text-slate-400">${queueLabel}</div>` : ''}
+          ${queueLabel ? `<div class="mt-3 text-xs text-slate-400">${queueLabel}</div>` : ''
+}
         </div>
       `;
     }
 
-    function previewFile(file, key, previewEl) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        state.images[key] = reader.result;
-        previewEl.innerHTML = `<img src="${reader.result}" alt="preview" class="h-full w-full rounded-2xl object-contain" />`;
+    function previewFile(file, key, previewEl
+) {
+      const reader = new FileReader
+();
+      reader.
+onload = () =>
+ {
+        state.
+images[key] = reader.result
+;
+        previewEl.
+innerHTML = `<img src="${reader.result}
+" alt="preview" class="h-full w-full rounded-2xl object-contain" />`;
       };
-      reader.readAsDataURL(file);
+      reader.
+readAsDataURL
+(file);
     }
 
-    function attachDropZone(dropEl, inputEl, key, previewEl) {
-      ['dragenter', 'dragover'].forEach(type => {
-        dropEl.addEventListener(type, e => {
-          e.preventDefault();
-          e.stopPropagation();
-          dropEl.classList.add('drop-active');
+    function attachDropZone(dropEl, inputEl, key, previewEl
+) {
+      [
+'dragenter', 'dragover'].forEach(type
+ => {
+        dropEl.
+addEventListener(type, e
+ => {
+          e.
+preventDefault
+();
+          e.
+stopPropagation
+();
+          dropEl.
+classList.add('drop-active'
+);
         });
       });
-      ['dragleave', 'drop'].forEach(type => {
-        dropEl.addEventListener(type, e => {
-          e.preventDefault();
-          e.stopPropagation();
-          dropEl.classList.remove('drop-active');
+      [
+'dragleave', 'drop'].forEach(type
+ => {
+        dropEl.
+addEventListener(type, e
+ => {
+          e.
+preventDefault
+();
+          e.
+stopPropagation
+();
+          dropEl.
+classList.remove('drop-active'
+);
         });
       });
-      dropEl.addEventListener('drop', e => {
-        const file = e.dataTransfer?.files?.[0];
-        if (file && file.type.startsWith('image/')) {
-          inputEl.files = e.dataTransfer.files;
-          previewFile(file, key, previewEl);
+      dropEl.
+addEventListener('drop', e
+ => {
+        const file = e.dataTransfer?.files?.[0
+];
+        if (file && file.type.startsWith('image/'
+)) {
+          inputEl.
+files = e.dataTransfer.files
+;
+          previewFile
+(file, key, previewEl);
         }
       });
     }
 
-    function normalizePromptForSingleMode(prompt) {
-      return (prompt || '').replaceAll('图3', '图2');
+    function normalizePromptForSingleMode(prompt
+) {
+      return (prompt || '').replaceAll('图3', '图2'
+);
     }
 
-    function buildStrictColorPrompt(prompt, colorRequirement, dualMode) {
-      const basePrompt = (prompt || '').trim();
-      const colorText = (colorRequirement || '').trim();
-      if (!colorText) return basePrompt;
-      const garmentScope = dualMode ? '上衣与下装' : '目标服装';
-      return `${basePrompt}\n\n【颜色严格约束】\n${colorText}\n请严格按照以上颜色要求生成，${garmentScope}的颜色必须与要求完全一致。禁止擅自改色、偏色、串色、提亮、压暗、改变冷暖色调，禁止把纯色改成花色或把花色改成其他配色；如果识别不确定，也必须优先遵守上述颜色要求。`;
+    function buildStrictColorPrompt(prompt, colorRequirement, dualMode
+) {
+      const basePrompt = (prompt || '').trim
+();
+      const colorText = (colorRequirement || '').trim
+();
+      if (!colorText) return
+ basePrompt;
+      const garmentScope = dualMode ? '上衣与下装' : '目标服装'
+;
+      return `${basePrompt}\n\n【颜色严格约束】\n${colorText}\n请严格按照以上颜色要求生成，${garmentScope}
+的颜色必须与要求完全一致。禁止擅自改色、偏色、串色、提亮、压暗、改变冷暖色调，禁止把纯色改成花色或把花色改成其他配色；如果识别不确定，也必须优先遵守上述颜色要求。`;
     }
 
-    function resolveGarmentMode(images, dualMode) {
-      const hasTop = !!images.top;
-      const hasPants = !!images.pants;
+    function resolveGarmentMode(images, dualMode
+) {
+      const hasTop = !!images.top
+;
+      const hasPants = !!images.pants
+;
 
-      if (!hasTop && !hasPants) throw new Error('请至少上传一张服装图');
+      if (!hasTop && !hasPants) throw new Error('请至少上传一张服装图'
+);
 
-      if (dualMode) {
-        if (!hasTop) throw new Error('你开启了双件模式，请先上传服装图1');
-        if (!hasPants) throw new Error('你开启了双件模式，请先上传服装图2');
-        return {
-          mode: 'both',
-          clothData: images.top,
-          pantsData: images.pants,
+      if
+ (dualMode) {
+        if (!hasTop) throw new Error('你开启了双件模式，请先上传服装图1'
+);
+        if (!hasPants) throw new Error('你开启了双件模式，请先上传服装图2'
+);
+        return
+ {
+          mode: 'both'
+,
+          clothData: images.top
+,
+          pantsData: images.pants
+,
         };
       }
 
-      return {
-        mode: images.top ? 'top' : 'pants',
-        clothData: images.top || images.pants,
-        pantsData: null,
+      return
+ {
+        mode: images.top ? 'top' : 'pants'
+,
+        clothData: images.top || images.pants
+,
+        pantsData: null
+,
       };
     }
 
-    function buildTaskFromCurrentForm() {
-      const workerUrl = normalizeWorkerUrl(el.workerUrl.value);
-      const model = el.model.value.trim();
-      let prompt = el.prompt.value.trim();
-      const colorRequirement = el.colorRequirement.value.trim();
+    function buildTaskFromCurrentForm(
+) {
+      const workerUrl = normalizeWorkerUrl(el.workerUrl.value
+);
+      const model = el.model.value.trim
+();
+      let prompt = el.prompt.value.trim
+();
+      const colorRequirement = el.colorRequirement.value.trim
+();
 
-      if (!workerUrl) throw new Error('请先输入 Worker 地址');
-      if (!model) throw new Error('请先输入 302AI 模型名');
-      if (!state.images.model) throw new Error('请先上传模特图');
-      if (!prompt) throw new Error('请先输入提示词');
+      if (!workerUrl) throw new Error('请先输入 Worker 地址'
+);
+      if (!model) throw new Error('请先输入 302AI 模型名'
+);
+      if (!state.images.model) throw new Error('请先上传模特图'
+);
+      if (!prompt) throw new Error('请先输入提示词'
+);
 
-      const garmentConfig = resolveGarmentMode(state.images, el.dualMode.checked);
-      if (garmentConfig.mode !== 'both') prompt = normalizePromptForSingleMode(prompt);
-      prompt = buildStrictColorPrompt(prompt, colorRequirement, el.dualMode.checked);
+      const garmentConfig = resolveGarmentMode(state.images, el.dualMode.checked
+);
+      if (garmentConfig.mode !== 'both') prompt = normalizePromptForSingleMode
+(prompt);
+      prompt = 
+buildStrictColorPrompt(prompt, colorRequirement, el.dualMode.checked
+);
 
-      return {
-        id: uid(),
+      return
+ {
+        id: uid
+(),
         workerUrl,
         model,
         prompt,
         colorRequirement,
-        dualMode: el.dualMode.checked,
-        mode: garmentConfig.mode,
-        images: {
-          model: state.images.model,
-          top: garmentConfig.clothData,
-          pants: garmentConfig.pantsData || TRANSPARENT_PNG_DATA_URL,
+        dualMode: el.dualMode.checked
+,
+        mode: garmentConfig.mode
+,
+        images
+: {
+          model: state.images.model
+,
+          top: garmentConfig.clothData
+,
+          pants: garmentConfig.pantsData || TRANSPARENT_PNG_DATA_URL
+,
         },
-        sourceThumbs: {
-          model: state.images.model,
-          top: state.images.top || state.images.pants,
-          pants: el.dualMode.checked ? state.images.pants : null,
+        sourceThumbs
+: {
+          model: state.images.model
+,
+          top: state.images.top || state.images.pants
+,
+          pants: el.dualMode.checked ? state.images.pants : null
+,
         },
-        status: 'queued',
-        createdAt: new Date().toLocaleString('zh-CN'),
-        taskId: '',
-        resultUrl: '',
-        errorMessage: '',
+        status: 'queued'
+,
+        createdAt: new Date().toLocaleString('zh-CN'
+),
+        taskId: ''
+,
+        resultUrl: ''
+,
+        errorMessage: ''
+,
       };
     }
 
-    function dataUrlToBase64(dataUrl) {
-      return String(dataUrl).split(',')[1];
+    function dataUrlToBase64(dataUrl
+) {
+      return String(dataUrl).split(',')[1
+];
     }
 
-    async function runTask(task) {
-      const workerUrl = normalizeWorkerUrl(task.workerUrl);
+    async function runTask(task
+) {
+      const workerUrl = normalizeWorkerUrl(task.workerUrl
+);
 
-      const fd = new FormData();
-      fd.append('mode', task.mode);
-      fd.append('model', task.model);
-      fd.append('prompt', task.prompt || '');
-      fd.append('modelImageBase64', dataUrlToBase64(task.images.model));
-      fd.append('modelImageType', task.images.model.split(';')[0].split(':')[1]);
-      fd.append('clothImageBase64', dataUrlToBase64(task.images.top));
-      fd.append('clothImageType', task.images.top.split(';')[0].split(':')[1]);
+      const fd = new FormData
+();
+      fd.
+append('mode', task.mode
+);
+      fd.
+append('model', task.model
+);
+      fd.
+append('prompt', task.prompt || ''
+);
+      fd.
+append('modelImageBase64', dataUrlToBase64(task.images.model
+));
+      fd.
+append('modelImageType', task.images.model.split(';')[0].split(':')[1
+]);
+      fd.
+append('clothImageBase64', dataUrlToBase64(task.images.top
+));
+      fd.
+append('clothImageType', task.images.top.split(';')[0].split(':')[1
+]);
 
-      if (task.mode === 'both' && task.images.pants && task.images.pants !== TRANSPARENT_PNG_DATA_URL) {
-        fd.append('pantsImageBase64', dataUrlToBase64(task.images.pants));
-        fd.append('pantsImageType', task.images.pants.split(';')[0].split(':')[1]);
+      if (task.mode === 'both' && task.images.pants && task.images.pants !== TRANSPARENT_PNG_DATA_URL
+) {
+        fd.
+append('pantsImageBase64', dataUrlToBase64(task.images.pants
+));
+        fd.
+append('pantsImageType', task.images.pants.split(';')[0].split(':')[1
+]);
       }
 
-      let res;
-      try {
-        res = await fetch(`${workerUrl}/api/tryon`, {
-          method: 'POST',
-          body: fd,
-          headers: { Accept: 'application/json' },
+      let
+ res;
+      try
+ {
+        res = 
+await fetch(`${workerUrl}
+/api/tryon`, {
+          method: 'POST'
+,
+          body
+: fd,
+          headers: { Accept: 'application/json'
+ },
         });
-      } catch (error) {
-        throw new Error('无法连接到 Worker。请先点“测试 Worker”，并确认地址可直接在浏览器打开、Worker 已部署、地址里没有多写 /api/tryon。');
+      } 
+catch
+ (error) {
+        throw new Error('无法连接到 Worker。请先点“测试 Worker”，并确认地址可直接在浏览器打开、Worker 已部署、地址里没有多写 /api/tryon。'
+);
       }
 
-      let json;
-      try {
-        json = await res.json();
-      } catch (error) {
-        throw new Error('Worker 已返回响应，但不是合法 JSON。请确认 Worker 代码已更新为最新版本。');
+      let
+ json;
+      try
+ {
+        json = 
+await res.json
+();
+      } 
+catch
+ (error) {
+        throw new Error('Worker 已返回响应，但不是合法 JSON。请确认 Worker 代码已更新为最新版本。'
+);
       }
 
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || '生成失败，请检查 Worker 配置或 302AI Key');
+      if (!res.ok || !json.ok
+) {
+        throw new Error(json.error || '生成失败，请检查 Worker 配置或 302AI Key'
+);
       }
-      if (!Array.isArray(json.images) || !json.images.length) {
-        throw new Error('模型执行成功，但没有解析出有效图片');
+      if (!Array.isArray(json.images) || !json.images.length
+) {
+        throw new Error('模型执行成功，但没有解析出有效图片'
+);
       }
 
-      return {
-        taskId: json.taskId || json.id || `worker-${Date.now()}`,
-        resultUrl: json.images[0],
-        costTime: json.costTime || json.elapsed || '-',
+      return
+ {
+        taskId: json.taskId || json.id || `worker-${Date
+.now()}`,
+        resultUrl: json.images[0
+],
+        costTime: json.costTime || json.elapsed || '-'
+,
       };
     }
 
-    function startElapsedTimer() {
-      clearInterval(state.elapsedTimer);
-      state.elapsedSeconds = 0;
-      el.elapsedText.textContent = '00:00';
-      state.elapsedTimer = setInterval(() => {
-        state.elapsedSeconds += 1;
-        el.elapsedText.textContent = formatTime(state.elapsedSeconds);
-      }, 1000);
+    function startElapsedTimer(
+) {
+      clearInterval(state.elapsedTimer
+);
+      state.
+elapsedSeconds = 0
+;
+      el.
+elapsedText.textContent = '00:00'
+;
+      state.
+elapsedTimer = setInterval(() =>
+ {
+        state.
+elapsedSeconds += 1
+;
+        el.
+elapsedText.textContent = formatTime(state.elapsedSeconds
+);
+      }, 
+1000
+);
     }
 
-    function stopAllTimers() {
-      clearInterval(state.elapsedTimer);
-      state.elapsedTimer = null;
+    function stopAllTimers(
+) {
+      clearInterval(state.elapsedTimer
+);
+      state.
+elapsedTimer = null
+;
     }
 
-    function setGeneratingUi(isGenerating) {
-      state.isGenerating = isGenerating;
-      el.generateBtn.disabled = isGenerating;
-      el.addQueueBtn.disabled = isGenerating;
-      el.queueAndStartBtn.disabled = isGenerating;
-      el.startQueueBtn.disabled = isGenerating || !state.queue.some(item => item.status === 'queued' || item.status === 'failed');
-      el.cancelBtn.disabled = !isGenerating;
-      el.clearPendingBtn.disabled = !state.queue.some(item => item.status === 'queued' || item.status === 'failed');
+    function setGeneratingUi(isGenerating
+) {
+      state.
+isGenerating
+ = isGenerating;
+      el.
+generateBtn.disabled
+ = isGenerating;
+      el.
+addQueueBtn.disabled
+ = isGenerating;
+      el.
+queueAndStartBtn.disabled
+ = isGenerating;
+      el.
+startQueueBtn.disabled = isGenerating || !state.queue.some(item => item.status === 'queued' || item.status === 'failed'
+);
+      el.
+cancelBtn.disabled
+ = !isGenerating;
+      el.
+clearPendingBtn.disabled = !state.queue.some(item => item.status === 'queued' || item.status === 'failed'
+);
     }
 
-    function saveHistory(item) {
-      const history = JSON.parse(localStorage.getItem('tryon_history') || '[]');
-      history.unshift(item);
-      localStorage.setItem('tryon_history', JSON.stringify(history.slice(0, 18)));
-      renderHistory();
+    function saveHistory(item
+) {
+      const history = JSON.parse(localStorage.getItem('tryon_history') || '[]'
+);
+      history.
+unshift
+(item);
+      localStorage.setItem('tryon_history', JSON.stringify(history.slice(0, 18
+)));
+      renderHistory
+();
     }
 
-    function renderHistory() {
-      const history = JSON.parse(localStorage.getItem('tryon_history') || '[]');
-      if (!history.length) {
-        el.historyWrap.innerHTML = '<div class="col-span-full rounded-2xl border border-slate-800 bg-slate-950 p-6 text-center text-sm text-slate-500">暂无历史记录</div>';
-        return;
+    function renderHistory(
+) {
+      const history = JSON.parse(localStorage.getItem('tryon_history') || '[]'
+);
+      if (!history.length
+) {
+        el.
+historyWrap.innerHTML = '<div class="col-span-full rounded-2xl border border-slate-800 bg-slate-950 p-6 text-center text-sm text-slate-500">暂无历史记录</div>'
+;
+        return
+;
       }
-      el.historyWrap.innerHTML = history.map(item => `
+      el.
+historyWrap.innerHTML = history.map(item => 
+`
         <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-          <button onclick="openPreview('${item.url}')" class="block w-full">
-            <img src="${item.url}" alt="history" class="h-36 w-full object-cover" />
+          <button onclick="openPreview('
+${item.url}
+')" class="block w-full">
+            <img src="
+${item.url}
+" alt="history" class="h-36 w-full object-cover" />
           </button>
           <div class="space-y-1 p-3">
-            <div class="line-clamp-2 text-xs text-slate-300">${escapeHtml(item.prompt)}</div>
-            <div class="text-[11px] text-slate-500">${item.time}</div>
+            <div class="line-clamp-2 text-xs text-slate-300">
+${escapeHtml(item.prompt)}
+</div>
+            <div class="text-[11px] text-slate-500">
+${item.time}
+</div>
           </div>
         </div>
-      `).join('');
+      `).
+join(''
+);
     }
 
-    function refreshPantsState() {
-      const dualMode = el.dualMode.checked;
-      el.pantsInput.disabled = !dualMode;
-      el.pantsBlock.classList.toggle('opacity-60', !dualMode);
-      if (!dualMode) {
-        if (!state.images.pants) {
-          el.pantsPreview.innerHTML = '<div class="px-4 text-center text-sm text-slate-500">当前为单图模式：图3会自动关闭。你可以把裤子图直接上传到服装图1，也可以只上传上衣图。</div>';
+    function refreshPantsState(
+) {
+      const dualMode = el.dualMode.checked
+;
+      el.
+pantsInput.disabled
+ = !dualMode;
+      el.
+pantsBlock.classList.toggle('opacity-60'
+, !dualMode);
+      if
+ (!dualMode) {
+        if (!state.images.pants
+) {
+          el.
+pantsPreview.innerHTML = '<div class="px-4 text-center text-sm text-slate-500">当前为单图模式：图3会自动关闭。你可以把裤子图直接上传到服装图1，也可以只上传上衣图。</div>'
+;
         }
-      } else if (!state.images.pants) {
-        el.pantsPreview.innerHTML = '<div class="px-4 text-center text-sm text-slate-500">当前为双件模式，请在这里上传服装图2。</div>';
+      } 
+else if (!state.images.pants
+) {
+        el.
+pantsPreview.innerHTML = '<div class="px-4 text-center text-sm text-slate-500">当前为双件模式，请在这里上传服装图2。</div>'
+;
       }
     }
 
-    function renderQueue() {
-      const total = state.queue.length;
-      const done = state.queue.filter(item => ['success', 'failed', 'stopped'].includes(item.status)).length;
-      el.queueSummaryText.textContent = `${done} / ${total}`;
+    function renderQueue(
+) {
+      const total = state.queue.length
+;
+      const done = state.queue.filter(item => ['success', 'failed', 'stopped'].includes(item.status)).length
+;
+      el.
+queueSummaryText.textContent = `${done} / ${total}
+`;
 
-      if (!total) {
-        el.queueWrap.innerHTML = '<div class="rounded-2xl border border-slate-800 bg-slate-950 p-6 text-center text-sm text-slate-500">队列还是空的。先配置一组任务，然后点“加入队列”。</div>';
-        setGeneratingUi(state.isGenerating);
-        return;
+      if
+ (!total) {
+        el.
+queueWrap.innerHTML = '<div class="rounded-2xl border border-slate-800 bg-slate-950 p-6 text-center text-sm text-slate-500">队列还是空的。先配置一组任务，然后点“加入队列”。</div>'
+;
+        setGeneratingUi(state.isGenerating
+);
+        return
+;
       }
 
-      const toneMap = {
-        queued: 'border-slate-700 text-slate-300 bg-slate-950',
-        uploading: 'border-sky-500/30 text-sky-200 bg-sky-500/10',
-        running: 'border-violet-500/30 text-violet-200 bg-violet-500/10',
-        success: 'border-emerald-500/30 text-emerald-200 bg-emerald-500/10',
-        failed: 'border-rose-500/30 text-rose-200 bg-rose-500/10',
-        stopped: 'border-amber-500/30 text-amber-200 bg-amber-500/10',
+      const
+ toneMap = {
+        queued: 'border-slate-700 text-slate-300 bg-slate-950'
+,
+        uploading: 'border-sky-500/30 text-sky-200 bg-sky-500/10'
+,
+        running: 'border-violet-500/30 text-violet-200 bg-violet-500/10'
+,
+        success: 'border-emerald-500/30 text-emerald-200 bg-emerald-500/10'
+,
+        failed: 'border-rose-500/30 text-rose-200 bg-rose-500/10'
+,
+        stopped: 'border-amber-500/30 text-amber-200 bg-amber-500/10'
+,
       };
-      const labelMap = {
-        queued: '等待中',
-        uploading: '上传中',
-        running: '生成中',
-        success: '成功',
-        failed: '失败',
-        stopped: '已停止',
+      const
+ labelMap = {
+        queued: '等待中'
+,
+        uploading: '上传中'
+,
+        running: '生成中'
+,
+        success: '成功'
+,
+        failed: '失败'
+,
+        stopped: '已停止'
+,
       };
 
-      el.queueWrap.innerHTML = state.queue.map((item, index) => `
-        <div class="rounded-2xl border ${toneMap[item.status] || toneMap.queued} p-4">
+      el.
+queueWrap.innerHTML = state.queue.map((item, index) => 
+`
+        <div class="rounded-2xl border 
+${toneMap[item.status] || toneMap.queued}
+ p-4">
           <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div class="flex gap-3">
-              <img src="${item.sourceThumbs.model}" alt="thumb" class="h-24 w-20 rounded-xl object-cover" />
+              <img src="
+${item.sourceThumbs.model}
+" alt="thumb" class="h-24 w-20 rounded-xl object-cover" />
               <div class="space-y-1">
-                <div class="text-sm font-semibold">任务 ${index + 1}</div>
-                <div class="text-xs opacity-80">${item.dualMode ? '双件模式' : '单图模式'} · ${escapeHtml(item.model)}</div>
-                <div class="line-clamp-2 text-xs opacity-80">${escapeHtml(item.prompt)}</div>
-                ${item.colorRequirement ? `<div class="line-clamp-2 text-[11px] text-amber-200/90">颜色要求：${escapeHtml(item.colorRequirement)}</div>` : ''}
-                <div class="text-[11px] opacity-70">加入时间：${item.createdAt}</div>
-                ${item.taskId ? `<div class="text-[11px] opacity-70">Task ID：${item.taskId}</div>` : ''}
-                ${item.errorMessage ? `<div class="text-[11px] text-rose-300">${escapeHtml(item.errorMessage)}</div>` : ''}
+                <div class="text-sm font-semibold">任务 
+${index + 1
+}</div>
+                <div class="text-xs opacity-80">
+${item.dualMode ? '双件模式' : '单图模式'} · ${escapeHtml(item.model)}
+</div>
+                <div class="line-clamp-2 text-xs opacity-80">
+${escapeHtml(item.prompt)}
+</div>
+                ${item.colorRequirement ? `<div class="line-clamp-2 text-[11px] text-amber-200/90">颜色要求：${escapeHtml(item.colorRequirement)}</div>` : ''
+}
+                <div class="text-[11px] opacity-70">加入时间：
+${item.createdAt}
+</div>
+                ${item.taskId ? `<div class="text-[11px] opacity-70">Task ID：${item.taskId}</div>` : ''
+}
+                ${item.errorMessage ? `<div class="text-[11px] text-rose-300">${escapeHtml(item.errorMessage)}</div>` : ''
+}
               </div>
             </div>
             <div class="flex flex-col items-start gap-2 md:items-end">
-              <div class="rounded-full border px-3 py-1 text-xs">${labelMap[item.status] || item.status}</div>
-              ${item.resultUrl ? `<button onclick="openPreview('${item.resultUrl}')" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200">查看结果</button>` : ''}
-              ${(item.status === 'queued' || item.status === 'failed') ? `<button onclick="removeQueueItem('${item.id}')" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:border-rose-500 hover:text-rose-200">${item.status === 'queued' ? '取消任务' : '移除任务'}</button>` : ''}
+              <div class="rounded-full border px-3 py-1 text-xs">
+${labelMap[item.status] || item.status}
+</div>
+              ${item.resultUrl ? `<button onclick="openPreview('${item.resultUrl}')" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200">查看结果</button>` : ''
+}
+              ${(item.status === 'queued' || item.status === 'failed') ? `<button onclick="removeQueueItem('${item.id}')" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:border-rose-500 hover:text-rose-200">${item.status === 'queued' ? '取消任务' : '移除任务'}</button>` : ''
+}
             </div>
           </div>
         </div>
-      `).join('');
-      setGeneratingUi(state.isGenerating);
+      `).
+join(''
+);
+      setGeneratingUi(state.isGenerating
+);
     }
 
-    async function addCurrentTaskToQueue(autoStart = false) {
-      try {
-        saveSettings();
-        await testWorkerConnection(false);
-        const task = buildTaskFromCurrentForm();
-        state.queue.push(task);
-        renderQueue();
-        el.workerUrl.value = task.workerUrl;
-        if (autoStart) {
-          setStatus('已加入队列并准备执行', 'queue');
-          showMessage(`任务已加入队列，正在自动开始执行。当前共有 ${state.queue.length} 个任务。`, 'queue');
-          await processQueue();
-          return;
+    async function addCurrentTaskToQueue(autoStart = false
+) {
+      try
+ {
+        saveSettings
+();
+        await testWorkerConnection(false
+);
+        const task = buildTaskFromCurrentForm
+();
+        state.
+queue.push
+(task);
+        renderQueue
+();
+        el.
+workerUrl.value = task.workerUrl
+;
+        if
+ (autoStart) {
+          setStatus('已加入队列并准备执行', 'queue'
+);
+          showMessage(`任务已加入队列，正在自动开始执行。当前共有 ${state.queue.length} 个任务。`, 'queue'
+);
+          await processQueue
+();
+          return
+;
         }
-        setStatus('已加入队列', 'queue');
-        showMessage(`任务已加入队列，当前共有 ${state.queue.length} 个任务。点击“开始队列”后才会执行。`, 'queue');
-      } catch (err) {
-        alert(err.message || '加入队列失败');
+        setStatus('已加入队列', 'queue'
+);
+        showMessage(`任务已加入队列，当前共有 ${state.queue.length} 个任务。点击“开始队列”后才会执行。`, 'queue'
+);
+      } 
+catch
+ (err) {
+        alert(err.message || '加入队列失败'
+);
       }
     }
 
-    function removeQueueItem(taskId) {
-      const target = state.queue.find(item => item.id === taskId);
-      if (!target) return;
-      if (target.id === state.activeQueueId || ['uploading', 'running'].includes(target.status)) return;
-      state.queue = state.queue.filter(item => item.id !== taskId);
-      renderQueue();
-      if (!state.queue.length && !state.isGenerating) {
-        setStatus('队列已清空', 'default');
-        showMessage('已从队列中移除选中的等待任务。');
+    function removeQueueItem(taskId
+) {
+      const target = state.queue.find(item => item.id
+ === taskId);
+      if (!target) return
+;
+      if (target.id === state.activeQueueId || ['uploading', 'running'].includes(target.status)) return
+;
+      state.
+queue = state.queue.filter(item => item.id
+ !== taskId);
+      renderQueue
+();
+      if (!state.queue.length && !state.isGenerating
+) {
+        setStatus('队列已清空', 'default'
+);
+        showMessage('已从队列中移除选中的等待任务。'
+);
       }
     }
-    window.removeQueueItem = removeQueueItem;
+    window.removeQueueItem
+ = removeQueueItem;
 
-    function clearPendingTasks() {
-      state.queue = state.queue.filter(item => !['queued', 'failed'].includes(item.status));
-      renderQueue();
+    function clearPendingTasks(
+) {
+      state.
+queue = state.queue.filter(item => !['queued', 'failed'].includes(item.status
+));
+      renderQueue
+();
     }
 
-    function findNextQueueTask() {
-      return state.queue.find(item => item.status === 'queued' || item.status === 'failed');
+    function findNextQueueTask(
+) {
+      return state.queue.find(item => item.status === 'queued' || item.status === 'failed'
+);
     }
 
-    async function executeTask(task, queueIndexLabel = '') {
-      state.currentTaskId = null;
-      setGeneratingUi(true);
-      setProgress(8);
-      startElapsedTimer();
-      el.taskIdText.textContent = '-';
-      el.taskStatusText.textContent = 'UPLOADING';
-      el.taskCostTimeText.textContent = '-';
+    async function executeTask(task, queueIndexLabel = ''
+) {
+      state.
+currentTaskId = null
+;
+      setGeneratingUi(true
+);
+      setProgress(8
+);
+      startElapsedTimer
+();
+      el.
+taskIdText.textContent = '-'
+;
+      el.
+taskStatusText.textContent = 'UPLOADING'
+;
+      el.
+taskCostTimeText.textContent = '-'
+;
 
-      task.status = 'uploading';
-      renderQueue();
-      setStatus(queueIndexLabel ? `队列执行中 ${queueIndexLabel}` : '上传图片中', 'running');
-      showMessage(`正在上传图片并请求 302AI 生成… ${queueIndexLabel}`, 'running');
+      task.
+status = 'uploading'
+;
+      renderQueue
+();
+      setStatus(queueIndexLabel ? `队列执行中 ${queueIndexLabel}` : '上传图片中', 'running'
+);
+      showMessage(`正在上传图片并请求 302AI 生成… ${queueIndexLabel}`, 'running'
+);
 
-      try {
-        setProgress(28);
-        task.status = 'running';
-        renderQueue();
-        el.taskStatusText.textContent = 'RUNNING';
-        setStatus(queueIndexLabel ? `队列生成中 ${queueIndexLabel}` : '生成中', 'running');
+      try
+ {
+        setProgress(28
+);
+        task.
+status = 'running'
+;
+        renderQueue
+();
+        el.
+taskStatusText.textContent = 'RUNNING'
+;
+        setStatus(queueIndexLabel ? `队列生成中 ${queueIndexLabel}` : '生成中', 'running'
+);
 
-        const progressTimer = setInterval(() => {
-          if (!state.isGenerating) return clearInterval(progressTimer);
-          setProgress(Math.min(92, state.progress + 6));
-        }, 1200);
+        const progressTimer = setInterval(() =>
+ {
+          if (!state.isGenerating) return clearInterval
+(progressTimer);
+          setProgress(Math.min(92, state.progress + 6
+));
+        }, 
+1200
+);
 
-        const result = await runTask(task);
-        clearInterval(progressTimer);
-        stopAllTimers();
+        const result = await runTask
+(task);
+        clearInterval
+(progressTimer);
+        stopAllTimers
+();
 
-        task.taskId = result.taskId || '';
-        state.currentTaskId = task.taskId;
-        task.status = 'success';
-        task.resultUrl = result.resultUrl;
-        task.errorMessage = '';
-        el.taskIdText.textContent = task.taskId || '-';
-        el.taskStatusText.textContent = 'SUCCESS';
-        el.taskCostTimeText.textContent = result.costTime || formatTime(state.elapsedSeconds);
-        setStatus(queueIndexLabel ? `队列成功 ${queueIndexLabel}` : '生成成功', 'success');
-        setProgress(100);
-        showResultImage(result.resultUrl, queueIndexLabel ? `刚完成：${queueIndexLabel}` : '');
-        saveHistory({ url: result.resultUrl, prompt: task.prompt, time: new Date().toLocaleString('zh-CN') });
-        renderQueue();
-      } catch (err) {
-        stopAllTimers();
-        task.status = 'failed';
-        task.errorMessage = err.message || '执行失败';
-        el.taskStatusText.textContent = 'FAILED';
-        el.taskCostTimeText.textContent = formatTime(state.elapsedSeconds);
-        setStatus(queueIndexLabel ? `队列失败 ${queueIndexLabel}` : '执行失败', 'error');
-        setProgress(100);
-        showMessage(task.errorMessage, 'error');
-        renderQueue();
+        task.
+taskId = result.taskId || ''
+;
+        state.
+currentTaskId = task.taskId
+;
+        task.
+status = 'success'
+;
+        task.
+resultUrl = result.resultUrl
+;
+        task.
+errorMessage = ''
+;
+        el.
+taskIdText.textContent = task.taskId || '-'
+;
+        el.
+taskStatusText.textContent = 'SUCCESS'
+;
+        el.
+taskCostTimeText.textContent = result.costTime || formatTime(state.elapsedSeconds
+);
+        setStatus(queueIndexLabel ? `队列成功 ${queueIndexLabel}` : '生成成功', 'success'
+);
+        setProgress(100
+);
+        showResultImage(result.resultUrl, queueIndexLabel ? `刚完成：${queueIndexLabel}` : ''
+);
+        saveHistory({ url: result.resultUrl, prompt: task.prompt, time: new Date().toLocaleString('zh-CN'
+) });
+        renderQueue
+();
+      } 
+catch
+ (err) {
+        stopAllTimers
+();
+        task.
+status = 'failed'
+;
+        task.
+errorMessage = err.message || '执行失败'
+;
+        el.
+taskStatusText.textContent = 'FAILED'
+;
+        el.
+taskCostTimeText.textContent = formatTime(state.elapsedSeconds
+);
+        setStatus(queueIndexLabel ? `队列失败 ${queueIndexLabel}` : '执行失败', 'error'
+);
+        setProgress(100
+);
+        showMessage(task.errorMessage, 'error'
+);
+        renderQueue
+();
       }
     }
 
-    async function processQueue() {
-      if (state.queueRunning || state.isGenerating) return;
-      if (!findNextQueueTask()) {
-        alert('队列里没有待执行任务');
-        return;
+    async function processQueue(
+) {
+      if (state.queueRunning || state.isGenerating) return
+;
+      if (!findNextQueueTask
+()) {
+        alert('队列里没有待执行任务'
+);
+        return
+;
       }
 
-      state.queueRunning = true;
-      state.stopAfterCurrent = false;
-      setStatus('队列启动', 'queue');
-      showMessage('队列已启动，系统会自动一个接一个生成。', 'queue');
+      state.
+queueRunning = true
+;
+      state.
+stopAfterCurrent = false
+;
+      setStatus('队列启动', 'queue'
+);
+      showMessage('队列已启动，系统会自动一个接一个生成。', 'queue'
+);
 
-      while (state.queueRunning) {
-        const nextTask = findNextQueueTask();
-        if (!nextTask) break;
-        state.activeQueueId = nextTask.id;
-        const index = state.queue.findIndex(item => item.id === nextTask.id);
-        await executeTask(nextTask, `第 ${index + 1} 个任务`);
-        if (state.stopAfterCurrent) break;
+      while (state.queueRunning
+) {
+        const nextTask = findNextQueueTask
+();
+        if (!nextTask) break
+;
+        state.
+activeQueueId = nextTask.id
+;
+        const index = state.queue.findIndex(item => item.id === nextTask.id
+);
+        await executeTask(nextTask, `第 ${index + 1
+} 个任务`);
+        if (state.stopAfterCurrent) break
+;
       }
 
-      state.activeQueueId = null;
-      state.queueRunning = false;
-      state.stopAfterCurrent = false;
-      setGeneratingUi(false);
-      renderQueue();
-      if (findNextQueueTask()) {
-        setStatus('队列已暂停', 'default');
-        showMessage('当前任务已停止，未开始的任务仍保留在队列里。');
-      } else {
-        setStatus('队列已完成', 'success');
-        showMessage('队列已执行完成。');
+      state.
+activeQueueId = null
+;
+      state.
+queueRunning = false
+;
+      state.
+stopAfterCurrent = false
+;
+      setGeneratingUi(false
+);
+      renderQueue
+();
+      if (findNextQueueTask
+()) {
+        setStatus('队列已暂停', 'default'
+);
+        showMessage('当前任务已停止，未开始的任务仍保留在队列里。'
+);
+      } 
+else
+ {
+        setStatus('队列已完成', 'success'
+);
+        showMessage('队列已执行完成。'
+);
       }
     }
 
-    async function handleGenerate() {
-      if (state.queueRunning || state.isGenerating) return;
-      try {
-        saveSettings();
-        await testWorkerConnection(false);
-        const task = buildTaskFromCurrentForm();
-        await executeTask(task, '当前任务');
-      } catch (err) {
-        alert(err.message || '执行失败');
-      } finally {
-        setGeneratingUi(false);
-        renderQueue();
+    async function handleGenerate(
+) {
+      if (state.queueRunning || state.isGenerating) return
+;
+      try
+ {
+        saveSettings
+();
+        await testWorkerConnection(false
+);
+        const task = buildTaskFromCurrentForm
+();
+        await executeTask(task, '当前任务'
+);
+      } 
+catch
+ (err) {
+        alert(err.message || '执行失败'
+);
+      } 
+finally
+ {
+        setGeneratingUi(false
+);
+        renderQueue
+();
       }
     }
 
-    function stopCurrentTask() {
-      if (!state.isGenerating) return;
-      state.stopAfterCurrent = true;
-      stopAllTimers();
+    function stopCurrentTask(
+) {
+      if (!state.isGenerating) return
+;
+      state.
+stopAfterCurrent = true
+;
+      stopAllTimers
+();
 
-      if (state.activeQueueId) {
-        const active = state.queue.find(item => item.id === state.activeQueueId);
-        if (active && ['uploading', 'running'].includes(active.status)) {
-          active.status = 'stopped';
-          active.errorMessage = '用户手动停止等待';
+      if (state.activeQueueId
+) {
+        const active = state.queue.find(item => item.id === state.activeQueueId
+);
+        if (active && ['uploading', 'running'].includes(active.status
+)) {
+          active.
+status = 'stopped'
+;
+          active.
+errorMessage = '用户手动停止等待'
+;
         }
       }
-      renderQueue();
-      setStatus('已停止等待', 'default');
-      showMessage(`已停止网页端等待。${state.currentTaskId ? `当前 Task ID：${state.currentTaskId}。` : ''} 如果 Worker 后端没有实现真正的中断，服务端任务仍可能继续；队列不会自动接着跑。`);
-      state.queueRunning = false;
-      state.activeQueueId = null;
-      state.isGenerating = false;
-      setGeneratingUi(false);
+      renderQueue
+();
+      setStatus('已停止等待', 'default'
+);
+      showMessage(`已停止网页端等待。${state.currentTaskId ? `当前 Task ID：${state.currentTaskId}。` : ''
+} 如果 Worker 后端没有实现真正的中断，服务端任务仍可能继续；队列不会自动接着跑。`);
+      state.
+queueRunning = false
+;
+      state.
+activeQueueId = null
+;
+      state.
+isGenerating = false
+;
+      setGeneratingUi(false
+);
     }
 
-    function openPreview(url) {
-      el.previewImage.src = url;
-      el.previewModal.classList.remove('hidden');
-      el.previewModal.classList.add('flex');
+    function openPreview(url
+) {
+      el.
+previewImage.src
+ = url;
+      el.
+previewModal.classList.remove('hidden'
+);
+      el.
+previewModal.classList.add('flex'
+);
     }
-    function closePreview() {
-      el.previewModal.classList.add('hidden');
-      el.previewModal.classList.remove('flex');
-      el.previewImage.src = '';
+    function closePreview(
+) {
+      el.
+previewModal.classList.add('hidden'
+);
+      el.
+previewModal.classList.remove('flex'
+);
+      el.
+previewImage.src = ''
+;
     }
-    window.openPreview = openPreview;
+    window.openPreview
+ = openPreview;
 
-    el.modelInput.addEventListener('change', e => {
-      const file = e.target.files?.[0];
-      if (file) previewFile(file, 'model', el.modelPreview);
+    el.
+modelInput.addEventListener('change', e
+ => {
+      const file = e.target.files?.[0
+];
+      if (file) previewFile(file, 'model', el.modelPreview
+);
     });
-    el.topInput.addEventListener('change', e => {
-      const file = e.target.files?.[0];
-      if (file) previewFile(file, 'top', el.topPreview);
+    el.
+topInput.addEventListener('change', e
+ => {
+      const file = e.target.files?.[0
+];
+      if (file) previewFile(file, 'top', el.topPreview
+);
     });
-    el.pantsInput.addEventListener('change', e => {
-      const file = e.target.files?.[0];
-      if (file) previewFile(file, 'pants', el.pantsPreview);
+    el.
+pantsInput.addEventListener('change', e
+ => {
+      const file = e.target.files?.[0
+];
+      if (file) previewFile(file, 'pants', el.pantsPreview
+);
     });
 
-    attachDropZone(el.modelDrop, el.modelInput, 'model', el.modelPreview);
-    attachDropZone(el.topDrop, el.topInput, 'top', el.topPreview);
-    attachDropZone(el.pantsDrop, el.pantsInput, 'pants', el.pantsPreview);
+    attachDropZone(el.modelDrop, el.modelInput, 'model', el.modelPreview
+);
+    attachDropZone(el.topDrop, el.topInput, 'top', el.topPreview
+);
+    attachDropZone(el.pantsDrop, el.pantsInput, 'pants', el.pantsPreview
+);
 
-    el.dualMode.addEventListener('change', () => {
-      saveSettings();
-      refreshPantsState();
+    el.
+dualMode.addEventListener('change', () =>
+ {
+      saveSettings
+();
+      refreshPantsState
+();
     });
-    el.workerUrl.addEventListener('change', () => {
-      el.workerUrl.value = normalizeWorkerUrl(el.workerUrl.value);
-      saveSettings();
+    el.
+workerUrl.addEventListener('change', () =>
+ {
+      el.
+workerUrl.value = normalizeWorkerUrl(el.workerUrl.value
+);
+      saveSettings
+();
     });
-    el.model.addEventListener('change', saveSettings);
-    el.prompt.addEventListener('change', saveSettings);
-    el.colorRequirement.addEventListener('change', saveSettings);
-    el.generateBtn.addEventListener('click', handleGenerate);
-    el.addQueueBtn.addEventListener('click', () => addCurrentTaskToQueue(false));
-    el.queueAndStartBtn.addEventListener('click', () => addCurrentTaskToQueue(true));
-    el.startQueueBtn.addEventListener('click', processQueue);
-    el.cancelBtn.addEventListener('click', stopCurrentTask);
-    el.clearPendingBtn.addEventListener('click', clearPendingTasks);
-    el.closePreviewBtn.addEventListener('click', closePreview);
-    el.previewModal.addEventListener('click', e => { if (e.target === el.previewModal) closePreview(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
-    el.testWorkerBtn.addEventListener('click', async () => {
-      try {
-        el.testWorkerBtn.disabled = true;
-        await testWorkerConnection(true);
-      } catch (err) {
-        setStatus('Worker 连接失败', 'error');
-        showMessage(err.message || 'Worker 连接失败', 'error');
-      } finally {
-        el.testWorkerBtn.disabled = false;
+    el.
+model.addEventListener('change'
+, saveSettings);
+    el.
+prompt.addEventListener('change'
+, saveSettings);
+    el.
+colorRequirement.addEventListener('change'
+, saveSettings);
+    el.
+generateBtn.addEventListener('click'
+, handleGenerate);
+    el.
+addQueueBtn.addEventListener('click', () => addCurrentTaskToQueue(false
+));
+    el.
+queueAndStartBtn.addEventListener('click', () => addCurrentTaskToQueue(true
+));
+    el.
+startQueueBtn.addEventListener('click'
+, processQueue);
+    el.
+cancelBtn.addEventListener('click'
+, stopCurrentTask);
+    el.
+clearPendingBtn.addEventListener('click'
+, clearPendingTasks);
+    el.
+closePreviewBtn.addEventListener('click'
+, closePreview);
+    el.
+previewModal.addEventListener('click', e => { if (e.target === el.previewModal) closePreview
+(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview
+(); });
+    el.
+testWorkerBtn.addEventListener('click', async
+ () => {
+      try
+ {
+        el.
+testWorkerBtn.disabled = true
+;
+        await testWorkerConnection(true
+);
+      } 
+catch
+ (err) {
+        setStatus('Worker 连接失败', 'error'
+);
+        showMessage(err.message || 'Worker 连接失败', 'error'
+);
+      } 
+finally
+ {
+        el.
+testWorkerBtn.disabled = false
+;
       }
     });
 
-    el.clearHistoryBtn.addEventListener('click', () => {
-      localStorage.removeItem('tryon_history');
-      renderHistory();
+    el.
+clearHistoryBtn.addEventListener('click', () =>
+ {
+      localStorage.removeItem('tryon_history'
+);
+      renderHistory
+();
     });
 
-    loadSettings();
-    renderHistory();
-    refreshPantsState();
+    loadSettings
+();
+    renderHistory
+();
+    refreshPantsState
+();
     renderQueue();
